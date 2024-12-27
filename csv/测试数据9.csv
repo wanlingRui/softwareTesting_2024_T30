@@ -1,0 +1,14 @@
+metric,value
+start_time,1700800000
+last_update,1700807200
+fuzzer_pid,92345
+cycles_done,700
+execs_done,1050000
+execs_per_sec,1500
+paths_total,2800
+paths_favored,420
+paths_found,350
+paths_imported,170
+max_depth,95
+unique_crashes,4
+unique_hangs,2
