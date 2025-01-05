@@ -1,106 +1,95 @@
 # 代码大作业
 
-一、总体架构
+## 一、总体架构
 
 项目的主要组件包括：
 
-analyse（分析模块）
-
-executor（执行模块）
-
-monitor（监控模块）
-
-scheduler（调度模块）
-
-seedsorter（种子排序模块）
-
-variation（变异模块）
+**analyse  （分析模块）**
+**executor（执行模块）**
+**monitor （监控模块）**
+**scheduler（调度模块）**
+**seedsorter（种子排序模块）**
+**variation（变异模块）**
 
 这些模块相互协作，共同实现模糊测试的全过程，从初始种子的准备、执行测试、监控反馈到不断优化和调度任务。
 
-二、模块详细介绍
 
-analyse（分析模块）
 
+## 二、模块详细介绍
+
+**1.analyse（分析模块）**
 CoverageReader：读取代码覆盖率信息。
-
 CoverageVisualizer：可视化展示代码覆盖率。
-
-executor（执行模块）
-
+**2.executor（执行模块）**
 AFLMutationOperators：提供多种模糊测试变异操作接口。
-
 FuzzerExecutor：执行模糊测试的主要类。
-
 TestRunner：运行测试用例的辅助工具。
-
-monitor（监控模块）
-
+**3.monitor（监控模块）**
 AFLMonitor：监控模糊测试过程中的各种状态和信息。
-
-scheduler（调度模块）
-
+**4.scheduler（调度模块）**
 AFLScheduler：管理和调度测试任务。
-
 TestCase：测试用例的抽象表示。
-
-seedsorter（种子排序模块）
-
+**5.seedsorter（种子排序模块）**
 Coverage：基于覆盖率的种子排序辅助类。
-
 FuzzTarget：模糊测试目标的封装。
-
 FuzzTargetImp：具体实现模糊测试目标的类。
-
 Seed：种子的基本接口。
-
 SeedSorter：种子排序的辅助工具。
-
 TestSeedSorter：实现测试种子的排序。
-
-variation（变异模块）
-
+**6.variation（变异模块）**
 ByteFlipMutator：字节翻转变异器。
-
 InsertionDeletionMutator：插入和删除变异器。
-
 Mutator：变异器的接口。
 
-三、类层次设计
 
-类层次设计方面，项目采用了接口与实现分离的方式，例如Mutator接口由ByteFlipMutator和InsertionDeletionMutator具体实现。这样设计的目的是为了增强代码的可扩展性和灵活性。
 
-四、使用方法
+## 三、设计
 
-配置环境：
+类层次设计方面，项目采用了**接口与实现分离**的方式，例如Mutator接口由ByteFlipMutator和InsertionDeletionMutator具体实现。这样设计的目的是为了**增强代码的可扩展性和灵活性**。
 
+Mutator为变异算子父接口定义了mutate方法对种子进行变异，实现了按位差进行变异等方法。
+CoverageReader使用了JDOM2对测试生成的XML进行解析转换并由CoverageVisualizer使用JfreeChart进行可视化AFLMutationOperators的类，它包含三个静态方法，用于对输入的字节数组进行变异操作。这些方法常用于模糊测试（Fuzz Testing），目的是通过引入随机变化来触发软件中的潜在错误。下面是每个方法的中文解释：
+
+1. **简单位翻转 (flipOneByteBit)**:
+
+   此方法从给定的输入数据中随机选择一个字节，并在这个字节内随机选择一位进行翻转（即如果该位为0则变为1，为1则变为0）。首先，它检查输入是否为空或长度为零，如果是，则直接返回输入。接着，它克隆输入数组以避免修改原数组，并随机选取一个字节索引和一个位索引进行位翻转操作。
+
+2. **块交换 (swapBlocks)**:
+
+   这个方法随机选择两个不重叠的“块”（连续的字节序列）并交换它们的位置。首先确保输入数据至少有两个字节长，然后克隆输入数组。接着，它随机决定块的大小（至少为1），以及两个起始位置，确保这两个块不重叠。最后，使用System.arraycopy方法交换这两块数据。
+
+3. **插入删除 (insertOrDeleteByte)**:
+
+   此方法随机执行一个字节的插入或删除操作。如果随机决定执行删除（并且输入长度大于1），则随机选择一个位置并移除该位置的字节，将数组缩短。若决定插入，则在随机位置添加一个新的字节，其值随机选定。这个方法同样先克隆输入数组，然后根据随机决策执行相应的数组操作。
+
+AFLScheduler主要用于指导模糊测试（fuzzing），以发现软件中的潜在漏洞。以下是各部分功能的详细解释：
+
+- PriorityQueue<TestCase>：一个优先队列，用于存储待执行的测试用例。队列按照测试用例score降序排列。
+- Random rand：随机数生成器，用于在变异操作中引入随机性。
+- BitSet totalCoverage：记录所有测试用例累计达到的代码边沿覆盖率
+
+
+
+## 四、使用方法
+
+**配置环境：**
 确保已安装Java运行环境。
-
 克隆项目代码到本地。
-
-编写测试目标：
-
+**编写测试目标：**
 实现FuzzTarget接口，编写具体的测试逻辑。
-
-配置和执行模糊测试：
-
+**配置和执行模糊测试：**
 配置AFLScheduler，设置测试参数。
-
 使用FuzzerExecutor执行模糊测试。
-
-分析和监控：
-
+**分析和监控：**
 使用CoverageReader读取覆盖率信息。
-
 使用AFLMonitor监控测试过程中的状态。
-
-优化和调整：
-
+**优化和调整：**
 使用seedsorter模块提供的工具对种子进行优化排序。
-
 根据测试结果调整变异策略。
 
-总结
+
+
+## 总结
 
 本项目通过模块化设计，将模糊测试的各个环节清晰分离，增强了代码的可维护性和可扩展性。通过详细的接口和实现设计，用户可以方便地定制和扩展测试流程。使用方法简单明了，从环境配置到具体实现，用户可以快速上手并进行有效的模糊测试。
 
